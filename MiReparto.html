@@ -134,12 +134,39 @@
       table th:nth-child(2),
       table td:nth-child(2),
       table th:nth-child(4),
-      table td:nth-child(4) {
+      table td:nth-child(4),
+      table th:nth-child(5),
+      table td:nth-child(5) {
         display: none;
       }
       .total-pending {
         display: none;
       }
+    }
+
+    /* Estilos adicionales para las mejoras */
+    .is-invalid {
+      border-color: #E63946 !important;
+    }
+    .invalid-feedback {
+      color: #E63946;
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Animación para eliminar filas */
+    @keyframes fadeOut {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0; transform: scale(0.9); }
+    }
+    .fade-out {
+      animation: fadeOut 0.3s ease-out forwards;
+    }
+
+    /* Ajustar tabla para el nuevo botón */
+    table th:nth-child(5),
+    table td:nth-child(5) {
+      width: 40px;
     }
   </style>
 </head>
@@ -202,6 +229,7 @@
               <th>Dirección</th>
               <th>Monto de Boleta</th>
               <th>Pago</th>
+              <th class="no-print">Acciones</th>
             </tr>
           </thead>
           <tbody id="clientTableBody">
@@ -242,14 +270,60 @@
     const clientForm = document.getElementById('clientForm');
     const clientTableBody = document.getElementById('clientTableBody');
 
+    // Modificar el event listener del formulario con validaciones
     clientForm.addEventListener('submit', function(e) {
       e.preventDefault();
-      const name = document.getElementById('clientName').value;
-      const amount = parseFloat(document.getElementById('billAmount').value).toFixed(2);
-      clientForm.reset();
-      addClientRow(name, amount);
+      
+      const name = document.getElementById('clientName').value.trim();
+      const amountInput = document.getElementById('billAmount');
+      const amount = parseFloat(amountInput.value);
+      
+      // Validaciones
+      if (!name) {
+        showValidationError('clientName', 'Ingrese un nombre válido');
+        return;
+      }
+      
+      if (isNaN(amount) || amount <= 0) {
+        showValidationError('billAmount', 'Ingrese un monto positivo');
+        return;
+      }
+      
+      // Si pasa las validaciones
+      addClientRow(name, amount.toFixed(2));
       updateTotals();
+      clientForm.reset();
       document.getElementById('clientName').focus();
+    });
+
+    // Función para mostrar errores de validación
+    function showValidationError(fieldId, message) {
+      const field = document.getElementById(fieldId);
+      const formGroup = field.closest('.mb-3');
+      
+      // Eliminar mensajes anteriores
+      const existingError = formGroup.querySelector('.invalid-feedback');
+      if (existingError) existingError.remove();
+      
+      // Estilos de error
+      field.classList.add('is-invalid');
+      
+      // Crear mensaje de error
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'invalid-feedback';
+      errorDiv.textContent = message;
+      formGroup.appendChild(errorDiv);
+      
+      // Enfocar el campo con error
+      field.focus();
+    }
+
+    // Resetear validaciones al empezar a escribir
+    document.getElementById('clientName').addEventListener('input', function() {
+      this.classList.remove('is-invalid');
+    });
+    document.getElementById('billAmount').addEventListener('input', function() {
+      this.classList.remove('is-invalid');
     });
 
     function addClientRow(name, amount) {
@@ -331,6 +405,35 @@
       });
 
       tr.appendChild(tdPago);
+
+      // Columna: Acciones (botón eliminar)
+      const tdActions = document.createElement('td');
+      tdActions.classList.add('no-print', 'text-center');
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.innerHTML = '❌';
+      deleteBtn.classList.add('btn', 'btn-sm', 'btn-link', 'text-danger', 'p-0');
+      deleteBtn.style.fontSize = '1.2em';
+      deleteBtn.setAttribute('aria-label', 'Eliminar cliente');
+      deleteBtn.setAttribute('data-bs-toggle', 'tooltip');
+      deleteBtn.setAttribute('title', 'Eliminar cliente');
+      new bootstrap.Tooltip(deleteBtn);
+
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        if (confirm('¿Seguro que deseas eliminar este cliente?')) {
+          tr.classList.add('fade-out');
+          setTimeout(() => {
+            tr.remove();
+            updateTotals();
+          }, 300);
+        }
+      });
+
+      tdActions.appendChild(deleteBtn);
+      tr.appendChild(tdActions);
+
       clientTableBody.appendChild(tr);
     }
 
