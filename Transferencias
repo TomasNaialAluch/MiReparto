@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Transferencias</title>
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap"
+    rel="stylesheet"
+  />
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <!-- Bootstrap Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+  />
+  <style>
+    body {
+      font-family: "Montserrat", sans-serif;
+      background-color: #f0f8ff;
+      color: #333;
+    }
+    .navbar {
+      background-color: #a9d6e5;
+    }
+    .navbar-brand {
+      font-weight: 700;
+      color: #fff !important;
+    }
+    .hamburger-btn {
+      border: none;
+      background: transparent;
+      padding: 0.5rem;
+    }
+    .hamburger-btn .navbar-toggler-icon {
+      width: 30px;
+      height: 30px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,255,255,1)' stroke-width='2' stroke-linecap='round' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+    }
+    .offcanvas-header {
+      background-color: #a9d6e5;
+      color: #fff;
+    }
+    .card {
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+    }
+    .dynamic-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .dynamic-row input {
+      flex: 1;
+    }
+    .remove-btn {
+      background: transparent;
+      border: none;
+      color: #e63946;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    /* Reglas de impresión */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        margin: 0 auto !important;
+        padding: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      body * {
+        visibility: hidden;
+      }
+      .printable,
+      .printable * {
+        visibility: visible;
+      }
+      .printable {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 600px;
+        padding: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Offcanvas Menu -->
+  <div
+    class="offcanvas offcanvas-start no-print"
+    tabindex="-1"
+    id="offcanvasMenu"
+    aria-labelledby="offcanvasMenuLabel"
+  >
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="offcanvasMenuLabel">Menú</h5>
+      <button
+        type="button"
+        class="btn-close text-reset"
+        data-bs-dismiss="offcanvas"
+        aria-label="Cerrar"
+      ></button>
+    </div>
+    <div class="offcanvas-body">
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item">
+          <a class="nav-link" href="Index.html">Inicio</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="SaldoClientes.html">Saldo Clientes</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="MiReparto.html">Mi Reparto</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="DolarHoy.html">Dólar Hoy</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="Transferencias.html"
+            >Transferencias</a
+          >
+        </li>
+      </ul>
+    </div>
+  </div>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg no-print">
+    <div class="container">
+      <button
+        class="hamburger-btn me-2"
+        type="button"
+        data-bs-toggle="offcanvas"
+        data-bs-target="#offcanvasMenu"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <a class="navbar-brand" href="#">Transferencias</a>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <h1 class="text-center mb-4 no-print">Transferencias</h1>
+    <!-- Formulario -->
+    <div class="card p-4 no-print">
+      <form>
+        <div class="mb-3">
+          <label for="clientName" class="form-label">Nombre del Cliente</label>
+          <input
+            type="text"
+            id="clientName"
+            class="form-control"
+            placeholder="Ingrese el nombre"
+            required
+          />
+        </div>
+        <hr />
+        <!-- Transferencias -->
+        <h4>Transferencias</h4>
+        <div id="transferContainer" class="mb-3">
+          <div class="dynamic-row transfer-row">
+            <input
+              type="text"
+              class="form-control transfer-desc"
+              placeholder="Descripción o nombre"
+              required
+            />
+            <input
+              type="number"
+              class="form-control transfer-amount"
+              placeholder="Monto AR$"
+              step="0.01"
+              required
+            />
+            <button
+              type="button"
+              class="remove-btn"
+              onclick="removeRow(this)"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="btn btn-secondary mb-3"
+          onclick="addTransferRow()"
+        >
+          Agregar Transferencia
+        </button>
+        <hr />
+        <!-- Boletas -->
+        <h4>Boletas vendidas al Cliente</h4>
+        <div id="boletasContainer" class="mb-3">
+          <div class="dynamic-row boleta-row">
+            <input
+              type="date"
+              class="form-control boleta-date"
+              required
+            />
+            <input
+              type="number"
+              class="form-control boleta-amount"
+              placeholder="Monto AR$"
+              step="0.01"
+              required
+            />
+            <button
+              type="button"
+              class="remove-btn"
+              onclick="removeRow(this)"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="btn btn-secondary mb-3"
+          onclick="addBoletaRow()"
+        >
+          Agregar Boleta
+        </button>
+        <hr />
+        <!-- Botón Calcular -->
+        <button
+          type="button"
+          class="btn btn-primary"
+          onclick="calcularSaldo()"
+        >
+          Calcular Saldo
+        </button>
+      </form>
+    </div>
+
+    <!-- Resumen (imprimible) -->
+    <div id="summarySection" class="card p-4 printable" style="display: none">
+      <div id="summaryContent"></div>
+      <button
+        id="printBtn"
+        class="btn btn-secondary mt-3 no-print"
+        onclick="window.print()"
+      >
+        Imprimir
+      </button>
+    </div>
+  </div>
+
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Agregar filas dinámicas para Transferencias
+    function addTransferRow() {
+      const container = document.getElementById("transferContainer");
+      const row = document.createElement("div");
+      row.className = "dynamic-row transfer-row";
+      row.innerHTML = `
+        <input
+          type="text"
+          class="form-control transfer-desc"
+          placeholder="Descripción o nombre"
+          required
+        />
+        <input
+          type="number"
+          class="form-control transfer-amount"
+          placeholder="Monto AR$"
+          step="0.01"
+          required
+        />
+        <button
+          type="button"
+          class="remove-btn"
+          onclick="removeRow(this)"
+        >
+          ×
+        </button>
+      `;
+      container.appendChild(row);
+    }
+
+    // Agregar filas dinámicas para Boletas
+    function addBoletaRow() {
+      const container = document.getElementById("boletasContainer");
+      const today = new Date().toISOString().split("T")[0];
+      const row = document.createElement("div");
+      row.className = "dynamic-row boleta-row";
+      row.innerHTML = `
+        <input
+          type="date"
+          class="form-control boleta-date"
+          value="${today}"
+          required
+        />
+        <input
+          type="number"
+          class="form-control boleta-amount"
+          placeholder="Monto AR$"
+          step="0.01"
+          required
+        />
+        <button
+          type="button"
+          class="remove-btn"
+          onclick="removeRow(this)"
+        >
+          ×
+        </button>
+      `;
+      container.appendChild(row);
+    }
+
+    // Eliminar filas
+    function removeRow(btn) {
+      btn.parentElement.remove();
+    }
+
+    // Formatear moneda
+    function formatCurrency(value) {
+      return new Intl.NumberFormat("es-AR", {
+        style: "currency",
+        currency: "ARS",
+        minimumFractionDigits: 2,
+      }).format(value);
+    }
+
+    function calcularSaldo() {
+      const clientName = document.getElementById("clientName").value.trim();
+
+      // Transferencias
+      let transferTotal = 0;
+      let transferListHtml = "";
+      document.querySelectorAll(".transfer-row").forEach((row, idx) => {
+        const desc = row.querySelector(".transfer-desc").value.trim();
+        const amount =
+          parseFloat(row.querySelector(".transfer-amount").value) || 0;
+        transferTotal += amount;
+        transferListHtml += `<p>Transferencia ${idx + 1}: <strong>${
+          desc || "Sin descripción"
+        }</strong> - ${formatCurrency(amount)}</p>`;
+      });
+
+      // Boletas
+      let boletasTotal = 0;
+      let boletasListHtml = "";
+      document.querySelectorAll(".boleta-row").forEach((row, idx) => {
+        const date = row.querySelector(".boleta-date").value;
+        const amount =
+          parseFloat(row.querySelector(".boleta-amount").value) || 0;
+        boletasTotal += amount;
+        boletasListHtml += `<p>Boleta ${idx + 1}: ${date} - ${formatCurrency(
+          amount
+        )}</p>`;
+      });
+
+      // Calcular diferencia
+      const diferencia = transferTotal - boletasTotal;
+      let saldoHtml = "";
+      if (diferencia > 0) {
+        saldoHtml = `<p><strong>Saldo a favor del Cliente:</strong> ${formatCurrency(
+          diferencia
+        )}</p>`;
+      } else if (diferencia < 0) {
+        saldoHtml = `<p><strong>Saldo a favor de Vos:</strong> ${formatCurrency(
+          Math.abs(diferencia)
+        )}</p>`;
+      } else {
+        saldoHtml = `<p><strong>Saldo Final:</strong> Exacto, no hay diferencia.</p>`;
+      }
+
+      // Construir resumen
+      const summaryHtml = `
+        <h2 class="mb-3">Resumen de Transferencias</h2>
+        <h3>Cliente: ${clientName || "Sin nombre"}</h3>
+        <hr />
+        <h4>Transferencias</h4>
+        ${transferListHtml}
+        <p><strong>Subtotal Transferencias:</strong> ${formatCurrency(
+          transferTotal
+        )}</p>
+        <hr />
+        <h4>Boletas</h4>
+        ${boletasListHtml}
+        <p><strong>Total Boletas:</strong> ${formatCurrency(boletasTotal)}</p>
+        <hr />
+        ${saldoHtml}
+      `;
+
+      document.getElementById("summaryContent").innerHTML = summaryHtml;
+      document.getElementById("summarySection").style.display = "block";
+    }
+  </script>
+</body>
+</html>
