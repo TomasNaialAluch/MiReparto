@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- SortableJS para reordenar filas -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <style>
     /* Estilos generales */
     body {
@@ -78,6 +80,9 @@
       vertical-align: middle;
       transition: background-color 0.3s;
     }
+    table tbody tr {
+      cursor: move; /* Indica que se puede arrastrar */
+    }
     table tbody tr:hover {
       background-color: #f0f8ff;
     }
@@ -140,7 +145,26 @@
         display: none;
       }
       .total-pending {
-        display: none;
+        display: block !important;
+      }
+      /* Agrandar los nombres de los clientes */
+      .printable table th:first-child,
+      .printable table td:first-child {
+        font-size: 1.2em;
+      }
+      /* Mostrar los totales en línea y agrandar el Total */
+      .totals-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+      }
+      .totals-container p {
+        margin: 0;
+      }
+      .totals-container p.total {
+        font-size: 1.5em;
+        font-weight: bold;
       }
     }
 
@@ -167,6 +191,12 @@
     table th:nth-child(5),
     table td:nth-child(5) {
       width: 40px;
+    }
+
+    /* Estilo para el arrastre de filas */
+    .sortable-ghost {
+      opacity: 0.5;
+      background: #c8ebfb;
     }
   </style>
 </head>
@@ -220,6 +250,7 @@
       </div>
       <div class="alert alert-info mt-2 no-print" role="alert">
         <small>En la columna Pago: clic para marcar pago completo o doble clic para ingresar un monto parcial.</small>
+        <small class="d-block mt-1">Puedes reordenar los clientes arrastrando las filas.</small>
       </div>
       <div class="table-responsive">
         <table class="table table-bordered mt-3">
@@ -237,9 +268,9 @@
           </tbody>
         </table>
       </div>
-      <div class="mt-3">
+      <div class="mt-3 totals-container">
         <p><strong>Subtotal:</strong> <span id="subtotal">0</span></p>
-        <p class="total-pending no-print"><strong>Total Pendiente:</strong> <span id="total">0</span></p>
+        <p class="total"><strong>Total Pendiente:</strong> <span id="total">0</span></p>
       </div>
     </div>
     
@@ -269,6 +300,15 @@
     
     const clientForm = document.getElementById('clientForm');
     const clientTableBody = document.getElementById('clientTableBody');
+
+    // Inicializar SortableJS para reordenar filas
+    new Sortable(clientTableBody, {
+      animation: 150,
+      ghostClass: 'sortable-ghost',
+      onEnd: function() {
+        updateTotals(); // Actualizar totales si es necesario
+      }
+    });
 
     // Modificar el event listener del formulario con validaciones
     clientForm.addEventListener('submit', function(e) {
@@ -347,6 +387,34 @@
       tdAmount.textContent = formatCurrency(amount);
       tr.appendChild(tdAmount);
 
+      // Permitir editar el monto con doble clic
+      tdAmount.addEventListener('dblclick', function() {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.step = '0.01';
+        input.classList.add('payment-input');
+        input.value = parseFloat(tr.dataset.bill).toFixed(2);
+        tdAmount.innerHTML = '';
+        tdAmount.appendChild(input);
+        input.focus();
+        input.addEventListener('blur', function() {
+          let newBill = parseFloat(input.value).toFixed(2);
+          if (isNaN(newBill) || newBill <= 0) {
+            alert("Ingrese un monto válido");
+            input.focus();
+            return;
+          }
+          tr.dataset.bill = newBill;
+          tdAmount.textContent = formatCurrency(newBill);
+          updateTotals();
+        });
+        input.addEventListener('keydown', function(ev) {
+          if (ev.key === 'Enter') {
+            input.blur();
+          }
+        });
+      });
+
       // Columna: Pago
       const tdPago = document.createElement('td');
       tdPago.style.cursor = 'pointer';
@@ -421,7 +489,6 @@
 
       deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        
         if (confirm('¿Seguro que deseas eliminar este cliente?')) {
           tr.classList.add('fade-out');
           setTimeout(() => {
