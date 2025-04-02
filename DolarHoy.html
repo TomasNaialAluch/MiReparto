@@ -316,25 +316,30 @@
       }
     }
     // Función para procesar datos históricos
-    function processHistoricalData(data) {
-      // Filtrar solo lunes (1) y viernes (5) de las últimas semanas
-      const filteredData = data
-        .filter(entry => {
-          const date = new Date(entry.date);
-          const day = date.getDay();
-          return day === 1 || day === 5;
-        })
-        .slice(0, 6); // Últimos 6 días (3 semanas)
-      // Actualizar UI con datos reales
-      if (filteredData.length >= 6) {
-        document.getElementById('currentMon').textContent = formatCurrency(filteredData[0].value_sell);
-        document.getElementById('currentFri').textContent = formatCurrency(filteredData[1].value_sell);
-        document.getElementById('prevMon').textContent = formatCurrency(filteredData[2].value_sell);
-        document.getElementById('prevFri').textContent = formatCurrency(filteredData[3].value_sell);
-        document.getElementById('prev2Mon').textContent = formatCurrency(filteredData[4].value_sell);
-        document.getElementById('prev2Fri').textContent = formatCurrency(filteredData[5].value_sell);
-      }
-    }
+   // Función para procesar datos históricos
+function processHistoricalData(data) {
+  // Filtrar solo lunes (1) y viernes (5) de las últimas semanas
+  const filteredData = data
+    .filter(entry => {
+      const date = new Date(entry.date);
+      const day = date.getDay();
+      // Asegurarse de que estamos usando el valor del dólar blue
+      return (day === 1 || day === 5) && entry.source === 'Blue';
+    })
+    .slice(0, 6); // Últimos 6 días (3 semanas)
+
+  // Actualizar UI con datos reales
+  if (filteredData.length >= 6) {
+    document.getElementById('currentMon').textContent = formatCurrency(filteredData[0].value_sell);
+    document.getElementById('currentFri').textContent = formatCurrency(filteredData[1].value_sell);
+    document.getElementById('prevMon').textContent = formatCurrency(filteredData[2].value_sell);
+    document.getElementById('prevFri').textContent = formatCurrency(filteredData[3].value_sell);
+    document.getElementById('prev2Mon').textContent = formatCurrency(filteredData[4].value_sell);
+    document.getElementById('prev2Fri').textContent = formatCurrency(filteredData[5].value_sell);
+  } else {
+    console.warn("No hay suficientes datos históricos del dólar blue para mostrar.");
+  }
+}
     // Event listeners para los inputs (Enter para convertir)
     document.getElementById('pesosInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') convertToDollars();
