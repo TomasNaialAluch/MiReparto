@@ -57,6 +57,24 @@
       .print-header { font-size: 24pt; text-align: center; margin-bottom: 1rem; }
       .print-small { font-size: 10pt; margin: 0; }
       .print-message { font-size: 18pt !important; text-align: center; }
+      .print-subtotal { font-size: 14pt; margin-top: 1rem; }
+    }
+    /* Estilos para el subtotal */
+    .subtotal-container {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border-left: 4px solid #A9D6E5;
+    }
+    .subtotal-label {
+      font-weight: 700;
+      color: #495057;
+    }
+    .subtotal-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #212529;
     }
   </style>
 </head>
@@ -74,7 +92,6 @@
         <li class="nav-item"><a class="nav-link" href="MiReparto.html">Mi Reparto</a></li>
         <li class="nav-item"><a class="nav-link" href="DolarHoy.html">DolarHoy</a></li>
         <li class="nav-item"><a class="nav-link" href="Transferencias.html">Transferencias</a></li>
-
       </ul>
     </div>
   </div>
@@ -202,6 +219,7 @@
     <!-- Resumen e Impresión -->
     <div id="summarySection" class="card p-4 printable" style="display: none;">
       <div id="summaryContent"></div>
+      <div id="subtotalSection" class="subtotal-container no-print"></div>
       <div id="finalBalanceSection" class="mt-3"></div>
       <button id="printBtn" class="btn btn-secondary mt-3 no-print" onclick="window.print()">Imprimir</button>
     </div>
@@ -371,6 +389,15 @@
       });
       summaryHtml += `<p class="print-small"><strong>Boletas vendidas por ${clientName}:</strong></p>` + boletasHtml;
       
+      // Mostrar subtotal de boletas
+      const subtotalHtml = `
+        <div class="subtotal-container">
+          <p class="subtotal-label">Total de Boletas vendidas por ${clientName}:</p>
+          <p class="subtotal-value">${formatCurrency(totalBoletas)}</p>
+        </div>
+      `;
+      document.getElementById('subtotalSection').innerHTML = subtotalHtml;
+      
       // Ventas
       let totalVentas = 0;
       let ventasHtml = "";
@@ -429,6 +456,13 @@
         summaryHtml += `<p class="print-small" style="margin-top: 1rem;"><strong>Transferencia:</strong></p>` + transferenciaHtml;
       }
       
+      // Agregar el subtotal al resumen imprimible
+      summaryHtml += `
+        <div class="print-subtotal">
+          <p><strong>Total de Boletas vendidas por ${clientName}:</strong> ${formatCurrency(totalBoletas)}</p>
+        </div>
+      `;
+      
       document.getElementById('summaryContent').innerHTML = summaryHtml;
       
       const finalBalance = (totalVentas + totalPlata + totalEfectivo + totalCheque + totalTransferencia) - totalBoletas;
@@ -442,7 +476,7 @@
                      <p class="print-message">Tú le debes ${formatCurrency(Math.abs(finalBalance))} a ${clientName}.</p>`;
       } else {
         finalHtml = `<h3 class="print-message">Saldo Final: ${formatCurrency(0)}</h3>
-                     <p class="print-message">¡Mano a Mano!</p>`;
+                     <p class="print-message">Las cuentas están saldadas. No hay deudas pendientes.</p>`;
       }
       
       document.getElementById('finalBalanceSection').innerHTML = finalHtml;
