@@ -59,6 +59,23 @@
       .print-message { font-size: 18pt !important; text-align: center; }
       .print-subtotal { font-size: 14pt; margin-top: 1rem; }
     }
+    /* Estilos para el subtotal */
+    .subtotal-container {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border-left: 4px solid #A9D6E5;
+    }
+    .subtotal-label {
+      font-weight: 700;
+      color: #495057;
+    }
+    .subtotal-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #212529;
+    }
   </style>
 </head>
 <body>
@@ -202,11 +219,14 @@
     <!-- Resumen e Impresión -->
     <div id="summarySection" class="card p-4 printable" style="display: none;">
       <div id="summaryContent"></div>
+      <div id="subtotalSection" class="subtotal-container no-print"></div>
+      <div id="finalBalanceSection" class="mt-3"></div>
       <button id="printBtn" class="btn btn-secondary mt-3 no-print" onclick="window.print()">Imprimir</button>
     </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // Función para formatear números a moneda argentina
     function formatCurrency(value) {
       return new Intl.NumberFormat('es-AR', {
         style: 'currency',
@@ -215,6 +235,8 @@
         maximumFractionDigits: 2
       }).format(value);
     }
+
+    // Aplica formateo a un input de monto
     function attachCurrencyFormatting(input) {
       input.addEventListener('blur', function() {
         let num = parseFloat(this.value.replace(/\./g, '').replace(',', '.'));
@@ -223,20 +245,28 @@
         }
       });
       input.addEventListener('focus', function() {
-        let val = this.value.replace(/\$/g, '').replace(/\./g, '').replace(',', '.').trim();
+        let val = this.value;
+        val = val.replace(/\$/g, '').replace(/\./g, '').replace(',', '.').trim();
         this.value = val;
       });
     }
+
+    // Función para parsear el valor formateado a número
     function parseCurrencyValue(value) {
       return parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
     }
+
     document.addEventListener('DOMContentLoaded', function() {
       const today = new Date().toISOString().split('T')[0];
       document.querySelectorAll('input[type="date"]').forEach(input => {
         if (!input.value) input.value = today;
       });
-      document.querySelectorAll('.boleta-amount, .venta-amount, .plata-amount, .efectivo-amount, .cheque-amount, .transferencia-amount').forEach(attachCurrencyFormatting);
+      // Aplica formateo a todos los campos de montos existentes
+      document.querySelectorAll('.boleta-amount, .venta-amount, .plata-amount, .efectivo-amount, .cheque-amount, .transferencia-amount').forEach(input => {
+        attachCurrencyFormatting(input);
+      });
     });
+
     function addBoletaRow() {
       const container = document.getElementById('boletasContainer');
       const today = new Date().toISOString().split('T')[0];
@@ -250,6 +280,7 @@
       container.appendChild(row);
       attachCurrencyFormatting(row.querySelector('.boleta-amount'));
     }
+
     function addVentaRow() {
       const container = document.getElementById('ventasContainer');
       const today = new Date().toISOString().split('T')[0];
@@ -263,6 +294,7 @@
       container.appendChild(row);
       attachCurrencyFormatting(row.querySelector('.venta-amount'));
     }
+
     function addPlataRow() {
       const container = document.getElementById('plataContainer');
       const row = document.createElement('div');
@@ -274,6 +306,7 @@
       container.appendChild(row);
       attachCurrencyFormatting(row.querySelector('.plata-amount'));
     }
+
     function addEfectivoRow() {
       const container = document.getElementById('efectivoContainer');
       const row = document.createElement('div');
@@ -285,6 +318,7 @@
       container.appendChild(row);
       attachCurrencyFormatting(row.querySelector('.efectivo-amount'));
     }
+
     function addChequeRow() {
       const container = document.getElementById('chequeContainer');
       const row = document.createElement('div');
@@ -297,6 +331,7 @@
       container.appendChild(row);
       attachCurrencyFormatting(row.querySelector('.cheque-amount'));
     }
+
     function addTransferenciaRow() {
       const container = document.getElementById('transferenciaContainer');
       const row = document.createElement('div');
@@ -308,103 +343,141 @@
       container.appendChild(row);
       attachCurrencyFormatting(row.querySelector('.transferencia-amount'));
     }
+
     function removeRow(btn) { btn.parentElement.remove(); }
-    ['Venta','Plata','Efectivo','Cheque','Transferencia'].forEach(type => {
-      document.getElementById('check'+type).addEventListener('change', function() {
-        const sec = document.getElementById(type.toLowerCase()+'Section');
-        sec.style.display = this.checked ? 'block' : 'none';
-        const cont = document.getElementById(type.toLowerCase()+'Container');
-        if (this.checked && cont.children.length === 0) window['add'+type+'Row']();
-      });
+
+    // Event listeners para mostrar/ocultar secciones
+    document.getElementById('checkVenta').addEventListener('change', function() {
+      document.getElementById('ventasSection').style.display = this.checked ? 'block' : 'none';
+      if (this.checked && document.getElementById('ventasContainer').children.length === 0) addVentaRow();
     });
 
+    document.getElementById('checkPlata').addEventListener('change', function() {
+      document.getElementById('plataSection').style.display = this.checked ? 'block' : 'none';
+      if (this.checked && document.getElementById('plataContainer').children.length === 0) addPlataRow();
+    });
+
+    document.getElementById('checkEfectivo').addEventListener('change', function() {
+      document.getElementById('efectivoSection').style.display = this.checked ? 'block' : 'none';
+      if (this.checked && document.getElementById('efectivoContainer').children.length === 0) addEfectivoRow();
+    });
+
+    document.getElementById('checkCheque').addEventListener('change', function() {
+      document.getElementById('chequeSection').style.display = this.checked ? 'block' : 'none';
+      if (this.checked && document.getElementById('chequeContainer').children.length === 0) addChequeRow();
+    });
+
+    document.getElementById('checkTransferencia').addEventListener('change', function() {
+      document.getElementById('transferenciaSection').style.display = this.checked ? 'block' : 'none';
+      if (this.checked && document.getElementById('transferenciaContainer').children.length === 0) addTransferenciaRow();
+    });
+
+    // Función principal de cálculo
     document.getElementById('calculateBtn').addEventListener('click', function() {
       const clientName = document.getElementById('clientName').value;
       let summaryHtml = `<h1 class="print-header">Resumen de Cuenta con ${clientName}</h1>`;
 
       // Boletas
-      let totalBoletas = 0, boletasHtml = '';
-      document.querySelectorAll('.boleta-row').forEach((row,i) => {
+      let boletasHtml = "";
+      let totalBoletas = 0;
+      document.querySelectorAll('.boleta-row').forEach((row, index) => {
         const date = row.querySelector('.boleta-date').value;
-        const amt  = parseCurrencyValue(row.querySelector('.boleta-amount').value);
-        totalBoletas += amt;
-        boletasHtml  += `<p class="print-small">Boleta ${i+1}: ${date}, ${formatCurrency(amt)}</p>`;
+        const amount = parseCurrencyValue(row.querySelector('.boleta-amount').value);
+        totalBoletas += amount;
+        boletasHtml += `<p class="print-small">Boleta ${index+1}: ${date}, ${formatCurrency(amount)}</p>`;
       });
-      summaryHtml += `<p class="print-small"><strong>Boletas vendidas por ${clientName}:</strong></p>${boletasHtml}`;
+      summaryHtml += `<p class="print-small"><strong>Boletas vendidas por ${clientName}:</strong></p>` + boletasHtml;
+
+      // Subtotal de Boletas
       summaryHtml += `
         <div class="print-subtotal">
-          <p><strong>Total de Boletas:</strong> ${formatCurrency(totalBoletas)}</p>
-        </div>`;
+          <p><strong>Total de Boletas vendidas por ${clientName}:</strong> ${formatCurrency(totalBoletas)}</p>
+        </div>
+      `;
 
       // Ventas
-      let totalVentas = 0, ventasHtml = '';
-      document.querySelectorAll('.venta-row').forEach((row,i)=>{
+      let totalVentas = 0, ventasHtml = "";
+      document.querySelectorAll('.venta-row').forEach((row, index) => {
         const date = row.querySelector('.venta-date').value;
-        const amt  = parseCurrencyValue(row.querySelector('.venta-amount').value);
-        totalVentas += amt;
-        ventasHtml += `<p class="print-small">Venta ${i+1}: ${date}, ${formatCurrency(amt)}</p>`;
+        const amount = parseCurrencyValue(row.querySelector('.venta-amount').value);
+        totalVentas += amount;
+        ventasHtml += `<p class="print-small">Venta ${index+1}: ${date}, ${formatCurrency(amount)}</p>`;
       });
-      if (totalVentas) summaryHtml += `<p class="print-small" style="margin-top:1rem;"><strong>Pagos (Ventas):</strong></p>${ventasHtml}`;
-
-      // Plata
-      let totalPlata = 0, plataHtml = '';
-      document.querySelectorAll('.plata-row').forEach((row,i)=>{
-        const amt = parseCurrencyValue(row.querySelector('.plata-amount').value);
-        totalPlata += amt;
-        plataHtml  += `<p class="print-small">Plata ${i+1}: ${formatCurrency(amt)}</p>`;
-      });
-      if (totalPlata) summaryHtml += `<p class="print-small" style="margin-top:1rem;"><strong>Plata a Favor:</strong></p>${plataHtml}`;
-
-      // Efectivo
-      let totalEfectivo = 0, efectivoHtml = '';
-      document.querySelectorAll('.efectivo-row').forEach((row,i)=>{
-        const amt = parseCurrencyValue(row.querySelector('.efectivo-amount').value);
-        totalEfectivo += amt;
-        efectivoHtml  += `<p class="print-small">Efectivo ${i+1}: ${formatCurrency(amt)}</p>`;
-      });
-      if (totalEfectivo) summaryHtml += `<p class="print-small" style="margin-top:1rem;"><strong>Efectivo:</strong></p>${efectivoHtml}`;
-
-      // Cheque
-      let totalCheque = 0, chequeHtml = '';
-      document.querySelectorAll('.cheque-row').forEach((row,i)=>{
-        const id  = row.querySelector('.cheque-id').value;
-        const amt = parseCurrencyValue(row.querySelector('.cheque-amount').value);
-        totalCheque += amt;
-        chequeHtml   += `<p class="print-small">Cheque ${i+1} (ID ${id}): ${formatCurrency(amt)}</p>`;
-      });
-      if (totalCheque) summaryHtml += `<p class="print-small" style="margin-top:1rem;"><strong>Cheque:</strong></p>${chequeHtml}`;
-
-      // Transferencia
-      let totalTransfer = 0, transferHtml = '';
-      document.querySelectorAll('.transferencia-row').forEach((row,i)=>{
-        const amt = parseCurrencyValue(row.querySelector('.transferencia-amount').value);
-        totalTransfer += amt;
-        transferHtml  += `<p class="print-small">Transferencia ${i+1}: ${formatCurrency(amt)}</p>`;
-      });
-      if (totalTransfer) summaryHtml += `<p class="print-small" style="margin-top:1rem;"><strong>Transferencia:</strong></p>${transferHtml}`;
-
-      // Total Pagos
-      const totalPagos = totalVentas + totalPlata + totalEfectivo + totalCheque + totalTransfer;
-      summaryHtml += `
-        <div class="print-subtotal">
-          <p><strong>Total de Pagos:</strong> ${formatCurrency(totalPagos)}</p>
-        </div>`;
-
-      // Saldo final
-      const balance = totalPagos - totalBoletas;
-      if (balance > 0) {
-        summaryHtml += `<h3 class="print-message">Saldo Final: ${formatCurrency(balance)}</h3>
-                        <p class="print-message">${clientName} te debe ${formatCurrency(balance)}.</p>`;
-      } else if (balance < 0) {
-        summaryHtml += `<h3 class="print-message">Saldo Final: ${formatCurrency(Math.abs(balance))}</h3>
-                        <p class="print-message">Tú le debes ${formatCurrency(Math.abs(balance))} a ${clientName}.</p>`;
-      } else {
-        summaryHtml += `<h3 class="print-message">Saldo Final: ${formatCurrency(0)}</h3>
-                        <p class="print-message">Las cuentas están saldadas.</p>`;
+      if (totalVentas > 0) {
+        summaryHtml += `<p class="print-small" style="margin-top: 1rem;"><strong>Ventas a ${clientName}:</strong></p>` + ventasHtml;
       }
 
+      // Plata a Favor
+      let totalPlata = 0, plataHtml = "";
+      document.querySelectorAll('.plata-row').forEach((row, index) => {
+        const amount = parseCurrencyValue(row.querySelector('.plata-amount').value);
+        totalPlata += amount;
+        plataHtml += `<p class="print-small">Plata ${index+1}: ${formatCurrency(amount)}</p>`;
+      });
+      if (totalPlata > 0) {
+        summaryHtml += `<p class="print-small" style="margin-top: 1rem;"><strong>Plata a Favor:</strong></p>` + plataHtml;
+      }
+
+      // Efectivo
+      let totalEfectivo = 0, efectivoHtml = "";
+      document.querySelectorAll('.efectivo-row').forEach((row, index) => {
+        const amount = parseCurrencyValue(row.querySelector('.efectivo-amount').value);
+        totalEfectivo += amount;
+        efectivoHtml += `<p class="print-small">Efectivo ${index+1}: ${formatCurrency(amount)}</p>`;
+      });
+      if (totalEfectivo > 0) {
+        summaryHtml += `<p class="print-small" style="margin-top: 1rem;"><strong>Efectivo:</strong></p>` + efectivoHtml;
+      }
+
+      // Cheque
+      let totalCheque = 0, chequeHtml = "";
+      document.querySelectorAll('.cheque-row').forEach((row, index) => {
+        const id = row.querySelector('.cheque-id').value;
+        const amount = parseCurrencyValue(row.querySelector('.cheque-amount').value);
+        totalCheque += amount;
+        chequeHtml += `<p class="print-small">Cheque ${index+1} (ID: ${id}): ${formatCurrency(amount)}</p>`;
+      });
+      if (totalCheque > 0) {
+        summaryHtml += `<p class="print-small" style="margin-top: 1rem;"><strong>Cheque:</strong></p>` + chequeHtml;
+      }
+
+      // Transferencia
+      let totalTransferencia = 0, transferenciaHtml = "";
+      document.querySelectorAll('.transferencia-row').forEach((row, index) => {
+        const amount = parseCurrencyValue(row.querySelector('.transferencia-amount').value);
+        totalTransferencia += amount;
+        transferenciaHtml += `<p class="print-small">Transferencia ${index+1}: ${formatCurrency(amount)}</p>`;
+      });
+      if (totalTransferencia > 0) {
+        summaryHtml += `<p class="print-small" style="margin-top: 1rem;"><strong>Transferencia:</strong></p>` + transferenciaHtml;
+      }
+
+      // --- AÑADIDO: Subtotal de todos los ingresos ---
+      const totalIngresos = totalVentas + totalPlata + totalEfectivo + totalCheque + totalTransferencia;
+      summaryHtml += `
+        <div class="print-subtotal">
+          <p><strong>Total de Ingresos por ${clientName}:</strong> ${formatCurrency(totalIngresos)}</p>
+        </div>
+      `;
+
       document.getElementById('summaryContent').innerHTML = summaryHtml;
-      document.getElementById('summarySection').style.display = 'block';
+
+      const finalBalance = totalIngresos - totalBoletas;
+      let finalHtml = "";
+
+      if (finalBalance > 0) {
+        finalHtml = `<h3 class="print-message">Saldo Final: ${formatCurrency(finalBalance)}</h3>
+                     <p class="print-message">${clientName} te debe ${formatCurrency(finalBalance)}.</p>`;
+      } else if (finalBalance < 0) {
+        finalHtml = `<h3 class="print-message">Saldo Final: ${formatCurrency(Math.abs(finalBalance))}</h3>
+                     <p class="print-message">Tú le debes ${formatCurrency(Math.abs(finalBalance))} a ${clientName}.</p>`;
+      } else {
+        finalHtml = `<h3 class="print-message">Saldo Final: ${formatCurrency(0)}</h3>
+                     <p class="print-message">Las cuentas están saldadas. No hay deudas pendientes.</p>`;
+      }
+
+      document.getElementById('finalBalanceSection').innerHTML = finalHtml;
+      document.getElementById('summarySection').style.display = "block";
     });
   </script>
 </body>
